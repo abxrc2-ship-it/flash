@@ -27,15 +27,13 @@ jobs:
         run: |
           java -version
           echo "JAVA_HOME: $JAVA_HOME"
-          JAVA_VER=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
-          if [ -z "$JAVA_VER" ]; then
-            echo "Error: Could not detect Java version."
-            exit 1
+          JAVA_MAJOR=$(java -version 2>&1 | sed -nE 's/.*version "([0-9]+).*/\1/p' | head -n 1)
+          if [ -z "$JAVA_MAJOR" ]; then
+            JAVA_MAJOR=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | head -n 1 | cut -d. -f1)
           fi
-          JAVA_MAJOR=$(echo "$JAVA_VER" | awk -F '.' '{if ($1 == "1") print $2; else print $1}')
           echo "Detected Java major version: $JAVA_MAJOR"
-          if ! [[ "$JAVA_MAJOR" =~ ^[0-9]+$ ]]; then
-            echo "Error: Failed to parse Java major version from '$JAVA_VER'."
+          if [ -z "$JAVA_MAJOR" ] || ! [[ "$JAVA_MAJOR" =~ ^[0-9]+$ ]]; then
+            echo "Error: Failed to detect Java major version."
             exit 1
           fi
           if [ "$JAVA_MAJOR" -lt 17 ]; then
@@ -70,6 +68,12 @@ jobs:
             exit 1
           fi
           echo "Temporary debug keystore verified."
+
+          # Ensure Android SDK licenses are accepted if sdkmanager is available
+          if [ -n "$ANDROID_HOME" ] && [ -d "$ANDROID_HOME" ]; then
+            mkdir -p "$ANDROID_HOME/licenses" 2>/dev/null || true
+            yes | sdkmanager --licenses >/dev/null 2>&1 || true
+          fi
 
       - name: Build debug APK
         run: gradle :app:assembleDebug --stacktrace --no-daemon
@@ -207,7 +211,7 @@ jobs:
               echo "You can download the APK directly on your phone from the release **Assets** section at the link above."
               echo "The standard GitHub Actions artifact named \`app-debug-apk\` is also available as a backup under this workflow run's Artifacts."
             } >> "$GITHUB_STEP_SUMMARY"
-          else
+          elif [ "${{ steps.publish_release.outcome }}" = "failure" ]; then
             echo "::warning::GitHub Release publishing did not succeed. (Outcome: ${{ steps.publish_release.outcome }})"
             echo "The debug APK build and artifact upload completed successfully."
             echo "The debug APK artifact named 'app-debug-apk' remains available for download."
@@ -218,5 +222,12 @@ jobs:
               echo "The debug APK was built successfully and preserved as a GitHub Actions artifact, but publishing to GitHub Releases encountered an issue."
               echo ""
               echo "You can download the APK directly from the **Artifacts** section of this workflow run: \`app-debug-apk\`."
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::error::Build did not complete. Release step was not executed. (Outcome: ${{ steps.publish_release.outcome }})"
+            {
+              echo "### :x: Debug APK Build Failed"
+              echo ""
+              echo "The debug APK build did not complete successfully. Check the step logs above to view the exact error."
             } >> "$GITHUB_STEP_SUMMARY"
           fi
