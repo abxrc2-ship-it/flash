@@ -1,0 +1,6 @@
+{
+  "name": "FlashLight Pro",
+  "description": "A modern, lightweight, fast, and beautiful Android flashlight application with instant torch control, Quick Settings Tile, and minimal battery usage.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

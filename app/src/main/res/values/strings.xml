@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">FlashLight Pro</string>
+    <string name="app_subtitle">Instant Light</string>
+    <string name="flashlight_on">Flashlight is ON</string>
+    <string name="flashlight_off">Flashlight is OFF</string>
+    <string name="tap_to_toggle">Tap to toggle flashlight</string>
+    <string name="no_flashlight_error">No flashlight available on this device.</string>
+    <string name="unable_to_control_error">Unable to control the flashlight. Please try again.</string>
+    <string name="status_on">ON</string>
+    <string name="status_off">OFF</string>
+    <string name="screen_light_mode">Screen Light</string>
+    <string name="strobe_sos_mode">Strobe / SOS</string>
+    <string name="settings">Settings</string>
+    <string name="quick_settings_tile_label">FlashLight Pro</string>
+</resources>
